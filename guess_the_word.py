@@ -3,61 +3,127 @@ Guess the Word Game
 “”"
 import random
 
-def get_display_word(word, guessed_letters):
-    return ' ’.join([letter if letter in guessed_letters else ‘_’
-                     for letter in word])
+class WordGuessingGame:
+    “”"A class to represent the word-guessing game.“”"
 
-def validate_guess(guess, guessed_letters):
-    “”"Validate user input”“”
-    if not guess or len(guess) != 1:
-        return False, “Please enter a single letter.”
+    def __init__(self, word_list=None, max_attempts=6):
+        if word_list is None:
+            self.word_list = [
+                “python”, “programming”, “computer”, “algorithm”,
+                “function”, “variable”, “database”, “network”,
+                “software”, “hardware”, “developer”, “testing”
+            ]
+        else:
+            self.word_list = word_list
 
-    if not guess.isalpha():
-        return False, “Please enter a valid letter (a-z).”
+        self.max_attempts = max_attempts
+        self.word = self.select_word()
+        self.guessed_letters = set()
+        self.incorrect_guesses = 0
+        self.game_over = False
+        self.won = False
 
-    if guess in guessed_letters:
-        return False, f”You already guessed ‘{guess}‘.”
+    def select_word(self):
+        “”"Select a random word from the word list.“”"
+        return random.choice(self.word_list).lower()
 
-    return True, “”
+    def get_display_word(self):
+        “”"Get current state of word with guessed letters revealed.“”"
+        return ' ’.join([letter if letter in self.guessed_letters else ‘_’
+                        for letter in self.word])
+
+    def guess_letter(self, letter):
+        “”"Process a letter guess with detailed feedback.“”"
+        # Validate input
+        if not letter or len(letter) != 1:
+            return {
+                ‘valid’: False,
+                ‘correct’: False,
+                ‘already_guessed’: False,
+                ‘message’: ‘Please enter a single letter.’
+            }
+
+        letter = letter.lower()
+
+        if not letter.isalpha():
+            return {
+                ‘valid’: False,
+                ‘correct’: False,
+                ‘already_guessed’: False,
+                ‘message’: ‘Please enter a valid letter (a-z).’
+            }
+
+        if letter in self.guessed_letters:
+            return {
+                ‘valid’: True,
+                ‘correct’: False,
+                ‘already_guessed’: True,
+                ‘message’: f’You already guessed “{letter}“.'
+            }
+
+        self.guessed_letters.add(letter)
+
+        if letter in self.word:
+            # Check if word is complete
+            if all(letter in self.guessed_letters for letter in self.word):
+                self.game_over = True
+                self.won = True
+
+            return {
+                ‘valid’: True,
+                ‘correct’: True,
+                ‘already_guessed’: False,
+                ‘message’: f’Good guess! “{letter}” is in the word.'
+            }
+        else:
+            self.incorrect_guesses += 1
+
+            if self.incorrect_guesses >= self.max_attempts:
+                self.game_over = True
+                self.won = False
+
+            return {
+                ‘valid’: True,
+                ‘correct’: False,
+                ‘already_guessed’: False,
+                ‘message’: f’Sorry, “{letter}” is not in the word.'
+            }
+
+    def get_remaining_attempts(self):
+        “”"Get number of remaining incorrect guesses allowed.“”"
+        return self.max_attempts - self.incorrect_guesses
+
+    def is_word_guessed(self):
+        “”"Check if entire word has been guessed.“”"
+        return all(letter in self.guessed_letters for letter in self.word)
 
 def play_game():
     print(“=” * 50)
     print(“Welcome to Guess the Word!“)
     print(“=” * 50)
+    print(“\nTry to guess the word one letter at a time.“)
+    print(“You have 6 incorrect guesses before you lose.\n”)
 
-    word_list = [“python”, “programming”, “computer”, “algorithm”,
-                 “function”, “variable”, “database”, “network”]
-    word = random.choice(word_list).lower()
+    game = WordGuessingGame()
 
-    guessed_letters = []
-    max_attempts = 6
-    incorrect_guesses = 0
+    while not game.game_over:
+        print(f”\nWord: {game.get_display_word()}“)
+        print(f”Guessed letters: {‘, ’.join(sorted(game.guessed_letters)) if game.guessed_letters else ‘None’}“)
+        print(f”Remaining attempts: {game.get_remaining_attempts()}“)
 
-    while incorrect_guesses < max_attempts:
-        print(f”\nWord: {get_display_word(word, guessed_letters)}“)
-        print(f”Guessed: {‘, ’.join(sorted(guessed_letters)) if guessed_letters else ‘None’}“)
-        print(f”Remaining attempts: {max_attempts - incorrect_guesses}“)
+        guess = input(“\nGuess a letter: “).strip()
+        result = game.guess_letter(guess)
+        print(result[‘message’])
 
-        guess = input(“\nGuess a letter: “).strip().lower()
+        if game.game_over:
+            print(“\n” + “=” * 50)
+            if game.won:
+                print(“:tada: CONGRATULATIONS! :tada:”)
+                print(f”You guessed the word: {game.word.upper()}“)
+            else:
+                print(“:disappointed: GAME OVER! :disappointed:”)
+                print(f”The word was: {game.word.upper()}“)
+            print(“=” * 50)
 
-        # Validate input
-        valid, message = validate_guess(guess, guessed_letters)
-        if not valid:
-            print(message)
-            continue
-
-        guessed_letters.append(guess)
-
-        if guess in word:
-            print(f”Good guess! ‘{guess}’ is in the word.“)
-            if all(letter in guessed_letters for letter in word):
-                print(f”\nCONGRATULATIONS! You guessed: {word.upper()}“)
-                break
-        else:
-            incorrect_guesses += 1
-            print(f”Sorry, ‘{guess}’ is not in the word.“)
-    else:
-        print(f”\nGAME OVER! The word was: {word.upper()}“)
-
-if __name__ == “__main__":
+if __name__ == “__main__“:
     play_game()
