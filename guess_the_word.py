@@ -1,23 +1,28 @@
 "“”
 Guess the Word Game
 “”"
+import random
 
 def get_display_word(word, guessed_letters):
-    “”"Show word with guessed letters revealed”“”
     return ' ’.join([letter if letter in guessed_letters else ‘_’
                      for letter in word])
 
 def play_game():
     print(“Welcome to Guess the Word!“)
-    word = “python”
+
+    # Word list
+    word_list = [“python”, “programming”, “computer”, “algorithm”,
+                 “function”, “variable”, “database”]
+    word = random.choice(word_list).lower()
+
     guessed_letters = []
     max_attempts = 6
     incorrect_guesses = 0
 
     while incorrect_guesses < max_attempts:
-        # Show current progress
         print(f”\nWord: {get_display_word(word, guessed_letters)}“)
-        print(f”Guessed: {‘, ’.join(guessed_letters)}“)
+        print(f”Guessed: {‘, ’.join(guessed_letters) if guessed_letters else ‘None’}“)
+        print(f”Remaining attempts: {max_attempts - incorrect_guesses}“)
 
         guess = input(“Guess a letter: “).lower()
 
@@ -29,15 +34,14 @@ def play_game():
 
         if guess in word:
             print(“Correct!“)
-            # Check if word is complete
             if all(letter in guessed_letters for letter in word):
-                print(f”You won! The word was: {word}“)
+                print(f”\nYou won! The word was: {word.upper()}“)
                 break
         else:
             incorrect_guesses += 1
-            print(f”Wrong! {max_attempts - incorrect_guesses} attempts left”)
+            print(f”Wrong!“)
     else:
-        print(f”Game Over! The word was: {word}“)
+        print(f”\n Game Over! The word was: {word.upper()}“)
 
 if __name__ == “__main__“:
     play_game()
